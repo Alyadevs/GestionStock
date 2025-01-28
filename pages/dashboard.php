@@ -34,13 +34,14 @@
 <body>
 <?php include('../includes/navbar.php'); ?>
 <div class="content">
-<?php include('../includes/sidbar.php'); ?>
-<div class="main-content">
+   <?php include('../includes/sidbar.php'); ?>
+         <div class="main-content">
             <!-- Contenu du dashboard -->
+             
             <h1>Bienvenue sur le dashboard</h1>
             <p>Ceci est le contenu principal de votre dashboard.</p>
         </div>
-    </div>
+ </div>
 </body>
 </html>
 

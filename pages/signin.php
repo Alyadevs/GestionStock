@@ -1,56 +1,47 @@
 <?php
-session_start();
+try {
+    $pdo = new PDO('mysql:host=localhost;dbname=gestionstock', 'root', '');
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-// Vérifier si l'utilisateur est déjà connecté
-if (isset($_SESSION['user_id'])) {
-    header('Location: dashboard.php');
-    exit();
-}
-
-// Traitement du formulaire de connexion
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Récupérer les données du formulaire
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $nom = $_POST['nom'];
+        $email = $_POST['email'];
+        $password = $_POST['password'];
 
-    try {
-        // Connexion à la base de données
-        $pdo = new PDO('mysql:host=localhost;dbname=gestionstock', 'root', '');
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        // Générer un hash du mot de passe
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-        // Préparer la requête SQL
-        $stmt = $pdo->prepare('SELECT id_user, password FROM users WHERE nom = :username');
-        $stmt->bindParam(':username', $username, PDO::PARAM_STR);
-        $stmt->execute();
+        // Supprimer l'utilisateur existant avec le même nom ou email (si nécessaire)
+        $pdo->exec("DELETE FROM users WHERE nom = '$nom' OR email = '$email'");
 
-        // Vérifier les informations de connexion
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        // Insérer un nouvel utilisateur avec le mot de passe hashé
+        $stmt = $pdo->prepare("INSERT INTO users (nom, email, password) VALUES (:nom, :email, :password)");
+        $stmt->execute([
+            ':nom' => $nom,
+            ':email' => $email,
+            ':password' => $hashed_password
+        ]);
 
-        if ($user && password_verify($password, $user['password'])) {
-            // Connexion réussie
-            $_SESSION['user_id'] = $user['id_user'];
-            header('Location: dashboard.php');
-            exit();
-        } else {
-            $error_message = "Nom d'utilisateur ou mot de passe incorrect.";
-        }
-    } catch (PDOException $e) {
-        $error_message = "Erreur de connexion à la base de données : " . $e->getMessage();
+        // echo "Utilisateur ajouté avec succès avec le mot de passe hashé.";
     }
+} catch (PDOException $e) {
+    echo "Erreur : " . $e->getMessage();
 }
 ?>
+
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Connexion</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription Utilisateur</title>
     <style>
-        /* Styles généraux */
         body {
             font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -68,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         h2 {
             margin-bottom: 20px;
-            color:rgb(243, 247, 250);
+            color: rgb(243, 247, 250);
         }
 
         label {
@@ -76,10 +67,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             text-align: left;
             font-weight: bold;
             margin-bottom: 5px;
-            color:rgb(223, 233, 242);
+            color: rgb(223, 233, 242);
         }
 
-        input[type="text"], input[type="password"] {
+        input[type="text"], input[type="email"], input[type="password"] {
             width: 100%;
             padding: 10px;
             margin-bottom: 15px;
@@ -110,7 +101,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border-radius: 5px;
             margin-bottom: 15px;
         }
-
         .register-link {
             margin-top: 15px;
             color:rgb(242, 246, 250);
@@ -129,22 +119,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <div class="container">
-        <h2>Connexion</h2>
-        <?php if (isset($error_message)) { ?>
-            <div class="error-message"><?php echo $error_message; ?></div>
-        <?php } ?>
-        <form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
-            <label for="username">Nom utilisateur</label>
-            <input type="text" id="username" name="username" placeholder="Entrez votre nom utilisateur" required>
+        <h2>Inscription Utilisateur</h2>
+
+        <!-- Formulaire pour l'inscription -->
+        <form method="POST" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+            <label for="nom">Nom</label>
+            <input type="text" id="nom" name="nom" placeholder="Entrez votre nom" required>
+
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="Entrez votre email" required>
 
             <label for="password">Mot de passe</label>
             <input type="password" id="password" name="password" placeholder="Entrez votre mot de passe" required>
 
-            <button type="submit">Connexion</button>
+            <button type="submit">S'inscrire</button>
         </form>
         <div class="register-link">
-            Vous n'avez pas de compte ? <a href="signin.php">Inscrivez-vous</a>
+            Vous avez un compte ? <a href="login.php">se connecter</a>
         </div>
     </div>
 </body>
 </html>
+

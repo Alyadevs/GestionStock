@@ -59,7 +59,7 @@
         <a href="dashboard.php" class="menu-item">
             <i class="fas fa-tachometer-alt"></i> Dashboard
         </a>
-        <a href="produits.php" class="menu-item">
+        <a href="listProduct.php" class="menu-item">
             <i class="fas fa-box"></i> Produits
         </a>
         <a href="fournisseurs.php" class="menu-item">
